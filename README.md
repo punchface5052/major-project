@@ -1,2 +1,2 @@
 # major-project
-C(heese)S30 Major Project
+C(hee)S(e)30 Major Project
