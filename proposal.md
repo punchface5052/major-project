@@ -1,6 +1,6 @@
 # Project Description
 
-Explain what you're going to build here.
+Make a Bullet-Hell centered around Cheese
 
 ## Needs to Have List
 
