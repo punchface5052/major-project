@@ -1,6 +1,6 @@
-// Project Title
-// Your Name
-// Date
+// Major Project
+// Liam Thorpe
+// Nov. 22, 2024
 //
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
