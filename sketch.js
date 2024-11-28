@@ -5,94 +5,122 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
+let groundLevel;
 let you;
+let gravity = 1;
 
 class Player {
-  constructor(x,y) {
+  constructor(x, y) {
     this.x = x;
     this.y = y;
     this.radius = 25;
     this.speed = 5;
-    this.jumpHeight = 100;
+    this.jumpHeight = 10;
     this.health = 5;
-    this.velocity = 0;
+    this.dy = 0;
+    this.flyJuice = 100;
+    this.isJumpable = false;
   }
-  display(){
+  display() {
     // image( "IMAGEPLACEHOLDER" ,this.x,this.y,this.size,this.size);
-    circle(this.x,this.y,this.radius*2);
+    circle(this.x, this.y, this.radius * 2);
   }
-  update(){
-    if (keyIsDown(65)){
-      this.x-= this.speed;
+  update() {
+    if (keyIsDown(65)) {
+      this.x -= this.speed;
     }
-    // if (keyIsDown(83)){
-    //   this.y += this.speed;
-    // }
-    if (keyIsDown(68)){
+    if (keyIsDown(68)) {
       this.x += this.speed;
     }
-    this.gravity();
+    this.applyGravity();
   }
-  shoot(){
+  shoot() {
     console.log("shoot");
   }
-  checkHealth(){
+  checkHealth() {
     console.log("checkHealth");
   }
-  gravity(){
-    if (this.y+this.radius<height-height/4){
-      this.velocity+=0.1;
-      this.y+=this.velocity;
+  applyGravity() {
+    if (!this.isJumpable && keyIsDown(16) && this.flyJuice >= 0) {
+      this.flight();
     }
-    else if (this.y+this.radius>height-height/4){
-      this.velocity = 0;
-      this.y = height-height/4-this.radius;
+    else {
+      gravity = 1;
     }
-    if (keyIsDown(87) && this.y+this.radius>=height-height/4){
-      if(dist(this.x,this.y,this.x,height-height/4)){
-        this.y-=this.velocity;
-        this.velocity+=0.1;
+    if (this.y + this.radius < groundLevel) { // falling
+      this.dy += gravity;
+      this.y += this.dy;
+      this.isJumpable = false;
+    }
+    else if (this.y + this.radius > groundLevel) { // snap to ground level
+      this.dy = 0;
+      this.isJumpable = true;
+      this.y = groundLevel - this.radius;
+      this.flyJuice = 100;
+    }
+    else { // apply gravity in general
+      this.y += this.dy;
+    }
+    this.jump();
+  }
+  jump() {
+    if (keyIsDown(32) && this.isJumpable) {
+      this.dy -= this.jumpHeight;
+    }
+  }
+  flight() {
+    if (this.flyJuice > 0) {
+      gravity = 0;
+      this.dy = 0;
+      this.speed = 10;
+      if (keyIsDown(83)) {
+        this.y += this.speed;
+      }
+      if (keyIsDown(87)) {
+        this.y -= this.speed;
       }
     }
+    this.flyJuice--;
   }
 }
 
 class Boss {
-  constructor(x,y) {
+  constructor(x, y) {
     this.x = x;
     this.y = y;
     this.size = 50;
     this.speed = 5;
     this.health = 5;
   }
-  display(){
-    image( "IMAGEPLACEHOLDER" ,this.x,this.y,this.size,this.size);
+  display() {
+    image("IMAGEPLACEHOLDER", this.x, this.y, this.size, this.size);
   }
-  update(){
+  update() {
 
   }
-  move(){
+  move() {
 
   }
-  shoot(){
+  shoot() {
 
   }
-  checkHealth(){
+  checkHealth() {
 
   }
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  you = new Player(50,50);
+  you = new Player(50, 50);
+  groundLevel = height - height / 16;
 }
 
 function draw() {
   background(220);
   you.update();
   you.display();
-  line(0,height-height/4,width,height-height/4);
+  line(0, groundLevel, width, groundLevel);
 }
 
-function keyPressed(){
+function keyPressed() {
 }
