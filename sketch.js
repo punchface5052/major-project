@@ -18,7 +18,8 @@ class Player {
     this.jumpHeight = 10;
     this.health = 5;
     this.dy = 0;
-    this.flyJuice = 100;
+    this.flyJuice = 50;
+    this.dashStrength = 25;
     this.isJumpable = false;
   }
   display() {
@@ -56,10 +57,12 @@ class Player {
       this.dy = 0;
       this.isJumpable = true;
       this.y = groundLevel - this.radius;
-      this.flyJuice = 100;
     }
-    else { // apply gravity in general
+    else { // apply gravity for jumps & on ground in general
       this.y += this.dy;
+      if(this.flyJuice<50){
+        this.flyJuice++;
+      }
     }
     this.jump();
   }
@@ -81,6 +84,17 @@ class Player {
       }
     }
     this.flyJuice--;
+  }
+  dash(){
+    if (this.flyJuice > this.dashStrength && this.y + this.radius === groundLevel){
+      if (keyIsDown(65)){
+        this.x -= this.dashStrength*8;
+      }
+      else if (keyIsDown(68)){
+        this.x += this.dashStrength*8;
+      }
+      this.flyJuice -= this.dashStrength;
+    }
   }
 }
 
@@ -119,8 +133,12 @@ function draw() {
   background(220);
   you.update();
   you.display();
+  text(you.flyJuice,100,100);
   line(0, groundLevel, width, groundLevel);
 }
 
 function keyPressed() {
+  if(keyCode === 16){
+    you.dash();
+  }
 }

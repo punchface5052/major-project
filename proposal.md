@@ -11,11 +11,11 @@ Make a Bullet-Hell centered around Cheese
 - [ ] Hit detection with actual death
 - [ ] Functional Boss and Player Health
 - [ ] Restart Game
+- [ ] Music & SFX
 
 ## Nice to Have List
 
 - [ ] Special Abilities
-- [ ] Music
 - [ ] Some sorta story type thing
 - [ ] More than one level
 - [ ] Good Visuals
