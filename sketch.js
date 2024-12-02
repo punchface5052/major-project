@@ -16,7 +16,7 @@ class Player {
     this.radius = 25;
     this.speed = 5;
     this.jumpHeight = 10;
-    this.health = 5;
+    this.health = 100;
     this.dy = 0;
     this.flyJuice = 50;
     this.dashStrength = 25;
@@ -25,6 +25,7 @@ class Player {
   display() {
     // image( "IMAGEPLACEHOLDER" ,this.x,this.y,this.size,this.size);
     circle(this.x, this.y, this.radius * 2);
+    this.checkHealth();
   }
   update() {
     if (keyIsDown(65)) {
@@ -35,12 +36,20 @@ class Player {
     }
     this.applyGravity();
   }
+
   shoot() {
     console.log("shoot");
   }
   checkHealth() {
-    console.log("checkHealth");
+    if(this.health > 0){
+      rect(50,50,width/4*(this.health/100),20);  
+    }
+    else{
+      return 'dead';
+    }
   }
+
+
   applyGravity() {
     if (!this.isJumpable && keyIsDown(16) && this.flyJuice >= 0) {
       this.flight();
