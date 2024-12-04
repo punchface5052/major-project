@@ -18,7 +18,7 @@ class Player {
     this.jumpHeight = 10;
     this.health = 100;
     this.dy = 0;
-    this.flyJuice = 50;
+    this.flyJuice = 100000;
     this.dashStrength = 25;
     this.isJumpable = false;
   }
@@ -69,7 +69,7 @@ class Player {
     }
     else { // apply gravity for jumps & on ground in general
       this.y += this.dy;
-      if(this.flyJuice<50){
+      if(this.flyJuice<30 && millis()%2===0){
         this.flyJuice++;
       }
     }
@@ -89,13 +89,17 @@ class Player {
         this.y += this.speed;
       }
       if (keyIsDown(87)) {
-        this.y -= this.speed;
+        if(this.y - this.radius>0){
+          this.y -= this.speed;
+        }
       }
     }
-    this.flyJuice--;
+    if(millis()%2 === 0){
+      this.flyJuice--;
+    }
   }
   dash(){
-    if (this.flyJuice > this.dashStrength && this.y + this.radius === groundLevel){
+    if (this.flyJuice > this.dashStrength && this.y + this.radius === groundLevel && millis()){
       if (keyIsDown(65)){
         this.x -= this.dashStrength*8;
       }
