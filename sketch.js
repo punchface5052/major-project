@@ -8,6 +8,7 @@
 let groundLevel;
 let you;
 let gravity = 1;
+const MAX_FLY_JUICE = 30;
 
 class Player {
   constructor(x, y) {
@@ -18,15 +19,20 @@ class Player {
     this.jumpHeight = 10;
     this.health = 100;
     this.dy = 0;
-    this.flyJuice = 100000;
+    this.flyJuice = 0;
     this.dashStrength = 25;
     this.isJumpable = false;
   }
+
   display() {
     // image( "IMAGEPLACEHOLDER" ,this.x,this.y,this.size,this.size);
+    fill('white');
     circle(this.x, this.y, this.radius * 2);
+    noFill();
     this.checkHealth();
+    this.dispFlyJuice();
   }
+
   update() {
     if (keyIsDown(65)) {
       this.x -= this.speed;
@@ -40,18 +46,22 @@ class Player {
   shoot() {
     console.log("shoot");
   }
+
   checkHealth() {
-    if(this.health > 0){
-      rect(50,50,width/4*(this.health/100),20);  
+    if (this.health > 0) {
+      fill('orange');
+      rect(50, 50, width / 4 * (this.health / 100), 20);
+      fill('black');
+      text(this.health,width/8,65);
     }
-    else{
+    else {
       return 'dead';
     }
   }
 
 
   applyGravity() {
-    if (!this.isJumpable && keyIsDown(16) && this.flyJuice >= 0) {
+    if (!this.isJumpable && keyIsDown(16) && this.flyJuice > 0) {
       this.flight();
     }
     else {
@@ -69,17 +79,19 @@ class Player {
     }
     else { // apply gravity for jumps & on ground in general
       this.y += this.dy;
-      if(this.flyJuice<30 && millis()%2===0){
+      if (this.flyJuice < MAX_FLY_JUICE && millis() % 2 === 0) {
         this.flyJuice++;
       }
     }
     this.jump();
   }
+
   jump() {
     if (keyIsDown(32) && this.isJumpable) {
       this.dy -= this.jumpHeight;
     }
   }
+
   flight() {
     if (this.flyJuice > 0) {
       gravity = 0;
@@ -89,25 +101,32 @@ class Player {
         this.y += this.speed;
       }
       if (keyIsDown(87)) {
-        if(this.y - this.radius>0){
+        if (this.y - this.radius > 0) {
           this.y -= this.speed;
         }
       }
-    }
-    if(millis()%2 === 0){
-      this.flyJuice--;
+      if (millis() % 2 === 0) {
+        this.flyJuice--;
+      }
     }
   }
-  dash(){
-    if (this.flyJuice > this.dashStrength && this.y + this.radius === groundLevel && millis()){
-      if (keyIsDown(65)){
-        this.x -= this.dashStrength*8;
+
+  dash() {
+    if (this.flyJuice > this.dashStrength && this.y + this.radius === groundLevel && millis()) {
+      if (keyIsDown(65)) {
+        this.x -= this.dashStrength * 8;
       }
-      else if (keyIsDown(68)){
-        this.x += this.dashStrength*8;
+      else if (keyIsDown(68)) {
+        this.x += this.dashStrength * 8;
       }
       this.flyJuice -= this.dashStrength;
     }
+  }
+
+  dispFlyJuice(){
+    fill('yellow');
+    rect(50, 75, width / 4 * (this.flyJuice / 100), 20);
+    noFill();
   }
 }
 
@@ -146,12 +165,14 @@ function draw() {
   background(220);
   you.update();
   you.display();
-  text(you.flyJuice,100,100);
+  fill('black');
+  text(you.flyJuice, 100, 90);
+  noFill();
   line(0, groundLevel, width, groundLevel);
 }
 
 function keyPressed() {
-  if(keyCode === 16){
+  if (keyCode === 16) {
     you.dash();
   }
 }
