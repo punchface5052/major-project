@@ -5,23 +5,25 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
+let state = 'title';
 let groundLevel;
 let you;
-let gravity = 1;
-const MAX_FLY_JUICE = 30;
+let gravity = 0.5;
+const MAX_FLY_JUICE = 100;
 
 class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
     this.radius = 25;
-    this.speed = 5;
+    this.speed = 10;
     this.jumpHeight = 10;
     this.health = 100;
     this.dy = 0;
-    this.flyJuice = 0;
-    this.dashStrength = 25;
+    this.flyJuice = 100;
+    this.dashStrength = 30;
     this.isJumpable = false;
+    this.isCollidable = true;
   }
 
   display() {
@@ -66,6 +68,8 @@ class Player {
     }
     else {
       gravity = 1;
+      this.radius = 25;
+      this.speed = 10;
     }
     if (this.y + this.radius < groundLevel) { // falling
       this.dy += gravity;
@@ -80,7 +84,7 @@ class Player {
     else { // apply gravity for jumps & on ground in general
       this.y += this.dy;
       if (this.flyJuice < MAX_FLY_JUICE && millis() % 2 === 0) {
-        this.flyJuice++;
+        this.flyJuice+=2;
       }
     }
     this.jump();
@@ -95,7 +99,9 @@ class Player {
   flight() {
     if (this.flyJuice > 0) {
       gravity = 0;
+      this.radius = 10;
       this.dy = 0;
+      this.isCollidable = false;
       this.speed = 10;
       if (keyIsDown(83)) {
         this.y += this.speed;
@@ -106,7 +112,7 @@ class Player {
         }
       }
       if (millis() % 2 === 0) {
-        this.flyJuice--;
+        this.flyJuice-=2;
       }
     }
   }
@@ -114,19 +120,25 @@ class Player {
   dash() {
     if (this.flyJuice > this.dashStrength && this.y + this.radius === groundLevel && millis()) {
       if (keyIsDown(65)) {
-        this.x -= this.dashStrength * 8;
+        this.x -= this.dashStrength * 5;
       }
       else if (keyIsDown(68)) {
-        this.x += this.dashStrength * 8;
+        this.x += this.dashStrength * 5;
       }
-      this.flyJuice -= this.dashStrength;
+
+      if(keyIsDown(65) || keyIsDown(68)){
+        this.flyJuice -= this.dashStrength;
+      }
     }
   }
 
   dispFlyJuice(){
+    noFill();
+    rect(50,75,width/4,20);
     fill('yellow');
     rect(50, 75, width / 4 * (this.flyJuice / 100), 20);
     noFill();
+    rect(50,75,width/12,20);
   }
 }
 
@@ -158,21 +170,42 @@ class Boss {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   you = new Player(50, 50);
+
   groundLevel = height - height / 16;
 }
 
 function draw() {
-  background(220);
-  you.update();
-  you.display();
-  fill('black');
-  text(you.flyJuice, 100, 90);
-  noFill();
-  line(0, groundLevel, width, groundLevel);
+  if(state === 'title'){
+    dispTitle();
+  }
+  else if(state === 'game'){
+    background(220);
+    you.update();
+    you.display();
+    fill('black');
+    text(frameRate(),400,400);
+    // text(you.flyJuice, 100, 90);
+    noFill();
+    line(0, groundLevel, width, groundLevel);
+  }
 }
 
 function keyPressed() {
   if (keyCode === 16) {
     you.dash();
   }
+}
+
+
+function mousePressed(){
+  if(state === 'title'){
+    state = 'game';
+    textSize(11);
+  }
+}
+
+function dispTitle(){
+  textAlign(CENTER);
+  textSize(100);
+  text('hi',width/2,height/2);
 }
