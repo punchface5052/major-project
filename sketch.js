@@ -9,6 +9,7 @@ let state = 'title';
 let groundLevel;
 let you;
 let gravity = 0.5;
+let playerBullets = [];
 const MAX_FLY_JUICE = 100;
 
 class Player {
@@ -21,7 +22,7 @@ class Player {
     this.health = 100;
     this.dy = 0;
     this.flyJuice = 100;
-    this.dashStrength = 30;
+    this.dashStrength = 40;
     this.isJumpable = false;
     this.isCollidable = true;
   }
@@ -46,7 +47,7 @@ class Player {
   }
 
   shoot() {
-    console.log("shoot");
+    console.log('shoot');
   }
 
   checkHealth() {
@@ -54,13 +55,12 @@ class Player {
       fill('orange');
       rect(50, 50, width / 4 * (this.health / 100), 20);
       fill('black');
-      text(this.health,width/8,65);
+      text(this.health, width / 8, 65);
     }
     else {
       return 'dead';
     }
   }
-
 
   applyGravity() {
     if (!this.isJumpable && keyIsDown(16) && this.flyJuice > 0) {
@@ -83,8 +83,8 @@ class Player {
     }
     else { // apply gravity for jumps & on ground in general
       this.y += this.dy;
-      if (this.flyJuice < MAX_FLY_JUICE && millis() % 2 === 0) {
-        this.flyJuice+=2;
+      if (this.flyJuice < MAX_FLY_JUICE) {
+        this.flyJuice++;
       }
     }
     this.jump();
@@ -112,7 +112,7 @@ class Player {
         }
       }
       if (millis() % 2 === 0) {
-        this.flyJuice-=2;
+        this.flyJuice -= 2;
       }
     }
   }
@@ -126,19 +126,35 @@ class Player {
         this.x += this.dashStrength * 5;
       }
 
-      if(keyIsDown(65) || keyIsDown(68)){
+      if (keyIsDown(65) || keyIsDown(68)) {
         this.flyJuice -= this.dashStrength;
       }
     }
   }
 
-  dispFlyJuice(){
+  dispFlyJuice() {
     noFill();
-    rect(50,75,width/4,20);
+    rect(50, 75, width / 4, 20);
     fill('yellow');
     rect(50, 75, width / 4 * (this.flyJuice / 100), 20);
     noFill();
-    rect(50,75,width/12,20);
+    rect(50, 75, width / 10, 20);
+  }
+}
+
+class PlayerProjectile {
+  constructor(x,y){
+    this.x = x;
+    this.y = y;
+    this.dx;
+    this.dy;
+    this.size = 5;
+  }
+  update(){
+    
+  }
+  dispBullet(){
+
   }
 }
 
@@ -151,7 +167,7 @@ class Boss {
     this.health = 5;
   }
   display() {
-    image("IMAGEPLACEHOLDER", this.x, this.y, this.size, this.size);
+    image('IMAGEPLACEHOLDER', this.x, this.y, this.size, this.size);
   }
   update() {
 
@@ -175,15 +191,14 @@ function setup() {
 }
 
 function draw() {
-  if(state === 'title'){
+  if (state === 'title') {
     dispTitle();
   }
-  else if(state === 'game'){
+  else if (state === 'game') {
     background(220);
     you.update();
     you.display();
     fill('black');
-    text(frameRate(),400,400);
     // text(you.flyJuice, 100, 90);
     noFill();
     line(0, groundLevel, width, groundLevel);
@@ -197,15 +212,15 @@ function keyPressed() {
 }
 
 
-function mousePressed(){
-  if(state === 'title'){
+function mousePressed() {
+  if (state === 'title') {
     state = 'game';
     textSize(11);
   }
 }
 
-function dispTitle(){
+function dispTitle() {
   textAlign(CENTER);
   textSize(100);
-  text('hi',width/2,height/2);
+  text('hi', width / 2, height / 2);
 }
