@@ -10,6 +10,8 @@ let groundLevel;
 let you;
 let gravity = 0.5;
 let playerBullets = [];
+let lastBulletShot = 0;
+let bulletDelay = 1000;
 const MAX_FLY_JUICE = 100;
 
 class Player {
@@ -146,15 +148,22 @@ class PlayerProjectile {
   constructor(x,y){
     this.x = x;
     this.y = y;
-    this.dx;
-    this.dy;
+    this.dx = 1;
+    this.dy = 1;
     this.size = 5;
+    this.weapon = 'normal';
   }
-  update(){
+  calcDirection(){
     
   }
+  update(){
+    this.x += this.dx;
+    this.y += this.dy;
+  }
   dispBullet(){
-
+    if(this.weapon === normal){
+      circle(this.x,this.y,this.size);
+    }
   }
 }
 
@@ -186,7 +195,6 @@ class Boss {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   you = new Player(50, 50);
-
   groundLevel = height - height / 16;
 }
 
@@ -198,6 +206,19 @@ function draw() {
     background(220);
     you.update();
     you.display();
+
+    if(mouseIsPressed && lastBulletShot < millis() - bulletDelay){
+      let newPP = new PlayerProjectile(you.x,you.y);
+      playerBullets.push(newPP);
+      lastBulletShot = millis();
+    }
+
+    if(playerBullets.length > 0){
+      for (let i = 0; i < playerBullets.length; i++){
+        playerBullets[i].update();
+        playerBullets[i].dispBullet();
+      }
+    }
     fill('black');
     // text(you.flyJuice, 100, 90);
     noFill();
@@ -216,6 +237,7 @@ function mousePressed() {
   if (state === 'title') {
     state = 'game';
     textSize(11);
+    lastBulletShot = millis();
   }
 }
 
