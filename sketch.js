@@ -29,13 +29,11 @@ class Player {
     this.isCollidable = true;
   }
 
-  display() {
-    // image( "IMAGEPLACEHOLDER" ,this.x,this.y,this.size,this.size);
-    fill('white');
-    circle(this.x, this.y, this.radius * 2);
+  displayChar() {
+    // push();
+    // image( "IMAGEPLACEHOLDER" ,0,0,this.size,this.size);
+    circle(0, 0, this.radius * 2);
     noFill();
-    this.checkHealth();
-    this.dispFlyJuice();
   }
 
   update() {
@@ -145,24 +143,27 @@ class Player {
 }
 
 class PlayerProjectile {
-  constructor(x,y){
-    this.x = x;
-    this.y = y;
-    this.dx = 1;
-    this.dy = 1;
+  constructor() {
+    this.x = 0;
+    this.y = 0;
+    this.speed = 5;
+    this.dx = 0;
+    this.dy = 0;
     this.size = 5;
     this.weapon = 'normal';
   }
-  calcDirection(){
-    
+  calcDirection() {
+    let angle = atan2(mouseY, mouseX);
+    this.dx = cos(angle) * this.speed;
+    this.dy = sin(angle) * this.speed;
   }
-  update(){
+  update() {
     this.x += this.dx;
     this.y += this.dy;
   }
-  dispBullet(){
-    if(this.weapon === normal){
-      circle(this.x,this.y,this.size);
+  dispBullet() {
+    if (this.weapon === 'normal') {
+      circle(this.x, this.y, this.size);
     }
   }
 }
@@ -205,20 +206,29 @@ function draw() {
   else if (state === 'game') {
     background(220);
     you.update();
-    you.display();
-
-    if(mouseIsPressed && lastBulletShot < millis() - bulletDelay){
-      let newPP = new PlayerProjectile(you.x,you.y);
+    push();
+    translate(you.x, you.y);
+    
+    if (mouseIsPressed && lastBulletShot < millis() - bulletDelay) {
+      let newPP = new PlayerProjectile();
+      newPP.calcDirection();
       playerBullets.push(newPP);
       lastBulletShot = millis();
     }
 
-    if(playerBullets.length > 0){
-      for (let i = 0; i < playerBullets.length; i++){
+    if (playerBullets.length > 0) {
+      for (let i = 0; i < playerBullets.length; i++) {
         playerBullets[i].update();
         playerBullets[i].dispBullet();
       }
     }
+
+    you.displayChar();
+    pop();
+    you.checkHealth();
+    you.dispFlyJuice();
+
+
     fill('black');
     // text(you.flyJuice, 100, 90);
     noFill();
