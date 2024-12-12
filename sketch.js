@@ -11,7 +11,7 @@ let you;
 let gravity = 0.5;
 let playerBullets = [];
 let lastBulletShot = 0;
-let bulletDelay = 1000;
+let bulletDelay = 100;
 const MAX_FLY_JUICE = 100;
 
 class Player {
@@ -30,9 +30,9 @@ class Player {
   }
 
   displayChar() {
-    // push();
+    fill('white');
     // image( "IMAGEPLACEHOLDER" ,0,0,this.size,this.size);
-    circle(0, 0, this.radius * 2);
+    circle(this.x, this.y, this.radius * 2);
     noFill();
   }
 
@@ -143,17 +143,17 @@ class Player {
 }
 
 class PlayerProjectile {
-  constructor() {
-    this.x = 0;
-    this.y = 0;
-    this.speed = 5;
+  constructor(x,y) {
+    this.x = x;
+    this.y = y;
+    this.speed = 20;
     this.dx = 0;
     this.dy = 0;
     this.size = 5;
     this.weapon = 'normal';
   }
   calcDirection() {
-    let angle = atan2(mouseY, mouseX);
+    let angle = atan2(mouseY-you.y, mouseX-you.x);
     this.dx = cos(angle) * this.speed;
     this.dy = sin(angle) * this.speed;
   }
@@ -206,25 +206,24 @@ function draw() {
   else if (state === 'game') {
     background(220);
     you.update();
+    you.displayChar();
     push();
     translate(you.x, you.y);
     
     if (mouseIsPressed && lastBulletShot < millis() - bulletDelay) {
-      let newPP = new PlayerProjectile();
+      let newPP = new PlayerProjectile(you.x,you.y);
       newPP.calcDirection();
       playerBullets.push(newPP);
       lastBulletShot = millis();
     }
-
+    pop();
+    
     if (playerBullets.length > 0) {
       for (let i = 0; i < playerBullets.length; i++) {
         playerBullets[i].update();
         playerBullets[i].dispBullet();
       }
     }
-
-    you.displayChar();
-    pop();
     you.checkHealth();
     you.dispFlyJuice();
 
