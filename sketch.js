@@ -26,7 +26,8 @@ class Player {
     this.flyJuice = 100;
     this.dashStrength = 40;
     this.isJumpable = false;
-    this.isCollidable = true;
+    this.isDamagable = true;
+    this.canShoot = true;
   }
 
   displayChar() {
@@ -38,10 +39,20 @@ class Player {
 
   update() {
     if (keyIsDown(65)) {
-      this.x -= this.speed;
+      if(this.x > 0 + this.radius){
+        this.x -= this.speed;
+      }
+      else{
+        this.x = 0 + this.radius;
+      }
     }
     if (keyIsDown(68)) {
-      this.x += this.speed;
+      if(this.x < width - this.radius){
+        this.x += this.speed;
+      }
+      else {
+        this.x = width - this.radius;
+      }
     }
     this.applyGravity();
   }
@@ -70,6 +81,7 @@ class Player {
       gravity = 1;
       this.radius = 25;
       this.speed = 10;
+      this.canShoot = true;
     }
     if (this.y + this.radius < groundLevel) { // falling
       this.dy += gravity;
@@ -101,14 +113,18 @@ class Player {
       gravity = 0;
       this.radius = 10;
       this.dy = 0;
-      this.isCollidable = false;
       this.speed = 10;
+      this.isDamagable = false;
+      this.canShoot = false;
       if (keyIsDown(83)) {
         this.y += this.speed;
       }
       if (keyIsDown(87)) {
         if (this.y - this.radius > 0) {
           this.y -= this.speed;
+        }
+        else {
+          this.y = 0 + this.radius;
         }
       }
       if (millis() % 2 === 0) {
@@ -166,6 +182,11 @@ class PlayerProjectile {
       circle(this.x, this.y, this.size);
     }
   }
+  deleteBullet(){
+    if(this.x < 0 || this.x > width || this.y > groundLevel || this.y < 0){
+      return true;
+    }
+  }
 }
 
 class Boss {
@@ -174,28 +195,26 @@ class Boss {
     this.y = y;
     this.size = 50;
     this.speed = 5;
-    this.health = 5;
+    this.health = 1000;
   }
   display() {
-    image('IMAGEPLACEHOLDER', this.x, this.y, this.size, this.size);
+    square(this.x,this.y,size);
   }
   update() {
-
-  }
-  move() {
 
   }
   shoot() {
 
   }
   checkHealth() {
-
+    if()
   }
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   you = new Player(50, 50);
+  boss = new Boss(width/2,height/2);
   groundLevel = height - height / 16;
 }
 
@@ -210,7 +229,7 @@ function draw() {
     push();
     translate(you.x, you.y);
     
-    if (mouseIsPressed && lastBulletShot < millis() - bulletDelay) {
+    if (mouseIsPressed && lastBulletShot < millis() - bulletDelay && you.canShoot) {
       let newPP = new PlayerProjectile(you.x,you.y);
       newPP.calcDirection();
       playerBullets.push(newPP);
@@ -222,6 +241,9 @@ function draw() {
       for (let i = 0; i < playerBullets.length; i++) {
         playerBullets[i].update();
         playerBullets[i].dispBullet();
+        if(playerBullets[i].deleteBullet()){
+          playerBullets.splice(i,1);
+        }
       }
     }
     you.checkHealth();
@@ -230,8 +252,9 @@ function draw() {
 
     fill('black');
     // text(you.flyJuice, 100, 90);
+    fill('white');
+    rect(-10, groundLevel, width+10, groundLevel);
     noFill();
-    line(0, groundLevel, width, groundLevel);
   }
 }
 
