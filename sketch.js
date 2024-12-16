@@ -5,10 +5,12 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
+
 let state = 'title';
 let groundLevel;
 let you;
-let gravity = 0.5;
+let bossMan;
+let gravity = 0.98;
 let playerBullets = [];
 let lastBulletShot = 0;
 let bulletDelay = 100;
@@ -23,7 +25,7 @@ class Player {
     this.jumpHeight = 10;
     this.health = 100;
     this.dy = 0;
-    this.flyJuice = 100;
+    this.flyJuice = MAX_FLY_JUICE;
     this.dashStrength = 40;
     this.isJumpable = false;
     this.isDamagable = true;
@@ -57,10 +59,6 @@ class Player {
     this.applyGravity();
   }
 
-  shoot() {
-    console.log('shoot');
-  }
-
   checkHealth() {
     if (this.health > 0) {
       fill('orange');
@@ -85,6 +83,9 @@ class Player {
     }
     if (this.y + this.radius < groundLevel) { // falling
       this.dy += gravity;
+      if(keyIsDown(87)){
+        this.dy /= 1.5;
+      }
       this.y += this.dy;
       this.isJumpable = false;
     }
@@ -196,9 +197,11 @@ class Boss {
     this.size = 50;
     this.speed = 5;
     this.health = 1000;
+    this.hit = false;
   }
   display() {
-    square(this.x,this.y,size);
+    square(this.x,this.y,this.size);
+    this.checkHealth();
   }
   update() {
 
@@ -206,8 +209,23 @@ class Boss {
   shoot() {
 
   }
+  hitDetec(){
+    for (let i = 0; i < playerBullets.length; i++){
+      this.hit = collideRectCircle(this.x,this.y,this.size,this.size,playerBullets[i].x,playerBullets[i].y,playerBullets[i].size);
+      if(this.hit){
+        playerBullets.splice(i,1);
+        this.health -= 1;
+      }
+    }
+  }
   checkHealth() {
-    if()
+    this.hitDetec();
+    fill('black');
+    text(this.health,width/2,height/2);
+    noFill();
+    // if('yes'){
+
+    // }
   }
 }
 
@@ -226,28 +244,10 @@ function draw() {
     background(220);
     you.update();
     you.displayChar();
-    push();
-    translate(you.x, you.y);
-    
-    if (mouseIsPressed && lastBulletShot < millis() - bulletDelay && you.canShoot) {
-      let newPP = new PlayerProjectile(you.x,you.y);
-      newPP.calcDirection();
-      playerBullets.push(newPP);
-      lastBulletShot = millis();
-    }
-    pop();
-    
-    if (playerBullets.length > 0) {
-      for (let i = 0; i < playerBullets.length; i++) {
-        playerBullets[i].update();
-        playerBullets[i].dispBullet();
-        if(playerBullets[i].deleteBullet()){
-          playerBullets.splice(i,1);
-        }
-      }
-    }
+    bullets();
     you.checkHealth();
     you.dispFlyJuice();
+    boss.display();
 
 
     fill('black');
@@ -255,6 +255,29 @@ function draw() {
     fill('white');
     rect(-10, groundLevel, width+10, groundLevel);
     noFill();
+  }
+}
+
+function bullets(){
+  push();
+  translate(you.x, you.y);
+  
+  if (mouseIsPressed && lastBulletShot < millis() - bulletDelay && you.canShoot) {
+    let newPP = new PlayerProjectile(you.x,you.y);
+    newPP.calcDirection();
+    playerBullets.push(newPP);
+    lastBulletShot = millis();
+  }
+  pop();
+  
+  if (playerBullets.length > 0) {
+    for (let i = 0; i < playerBullets.length; i++) {
+      playerBullets[i].update();
+      playerBullets[i].dispBullet();
+      if(playerBullets[i].deleteBullet()){
+        playerBullets.splice(i,1);
+      }
+    }
   }
 }
 
