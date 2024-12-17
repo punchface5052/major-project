@@ -14,6 +14,11 @@ let gravity = 0.98;
 let playerBullets = [];
 let lastBulletShot = 0;
 let bulletDelay = 100;
+let weapon = 'normal';
+let weaponMap = new Map();
+weaponMap.set('normal',1);
+weaponMap.set('double',2);
+weaponMap.set('lazer',10);
 const MAX_FLY_JUICE = 100;
 
 class Player {
@@ -41,15 +46,15 @@ class Player {
 
   update() {
     if (keyIsDown(65)) {
-      if(this.x > 0 + this.radius){
+      if (this.x > 0 + this.radius) {
         this.x -= this.speed;
       }
-      else{
+      else {
         this.x = 0 + this.radius;
       }
     }
     if (keyIsDown(68)) {
-      if(this.x < width - this.radius){
+      if (this.x < width - this.radius) {
         this.x += this.speed;
       }
       else {
@@ -83,8 +88,8 @@ class Player {
     }
     if (this.y + this.radius < groundLevel) { // falling
       this.dy += gravity;
-      if(keyIsDown(87)){
-        this.dy /= 1.5;
+      if (keyIsDown(87) && dist(0,this.y,0,groundLevel) > this.jumpHeight*12.5) {
+        this.dy = 1.5;
       }
       this.y += this.dy;
       this.isJumpable = false;
@@ -160,31 +165,37 @@ class Player {
 }
 
 class PlayerProjectile {
-  constructor(x,y) {
+  constructor(x, y) {
     this.x = x;
     this.y = y;
     this.speed = 20;
     this.dx = 0;
     this.dy = 0;
     this.size = 5;
-    this.weapon = 'normal';
+    this.damage = weapon;
   }
-  calcDirection() {
-    let angle = atan2(mouseY-you.y, mouseX-you.x);
+  calcStatus() {
+    let angle = atan2(mouseY - you.y, mouseX - you.x);
     this.dx = cos(angle) * this.speed;
     this.dy = sin(angle) * this.speed;
+
   }
   update() {
     this.x += this.dx;
     this.y += this.dy;
+
   }
   dispBullet() {
-    if (this.weapon === 'normal') {
+    if (this.damage === 'normal') {
       circle(this.x, this.y, this.size);
     }
+    else if (this.damage === 'double'){
+      circle(this.x+5,this.y,this.size);
+      circle(this.x-5,this.y,this.size);
+    }
   }
-  deleteBullet(){
-    if(this.x < 0 || this.x > width || this.y > groundLevel || this.y < 0){
+  deleteBullet() {
+    if (this.x < 0 || this.x > width || this.y > groundLevel || this.y < 0) {
       return true;
     }
   }
@@ -200,7 +211,7 @@ class Boss {
     this.hit = false;
   }
   display() {
-    square(this.x,this.y,this.size);
+    square(this.x, this.y, this.size);
     this.checkHealth();
   }
   update() {
@@ -209,19 +220,19 @@ class Boss {
   shoot() {
 
   }
-  hitDetec(){
-    for (let i = 0; i < playerBullets.length; i++){
-      this.hit = collideRectCircle(this.x,this.y,this.size,this.size,playerBullets[i].x,playerBullets[i].y,playerBullets[i].size);
-      if(this.hit){
-        playerBullets.splice(i,1);
-        this.health -= 1;
+  hitDetec() {
+    for (let i = 0; i < playerBullets.length; i++) {
+      this.hit = collideRectCircle(this.x, this.y, this.size, this.size, playerBullets[i].x, playerBullets[i].y, playerBullets[i].size);
+      if (this.hit) {
+        this.health -= weaponMap.get(playerBullets[i].damage);
+        playerBullets.splice(i, 1);
       }
     }
   }
   checkHealth() {
     this.hitDetec();
     fill('black');
-    text(this.health,width/2,height/2);
+    text(this.health, width / 2, height / 2);
     noFill();
     // if('yes'){
 
@@ -232,7 +243,7 @@ class Boss {
 function setup() {
   createCanvas(windowWidth, windowHeight);
   you = new Player(50, 50);
-  boss = new Boss(width/2,height/2);
+  boss = new Boss(width / 2, height / 2);
   groundLevel = height - height / 16;
 }
 
@@ -253,29 +264,29 @@ function draw() {
     fill('black');
     // text(you.flyJuice, 100, 90);
     fill('white');
-    rect(-10, groundLevel, width+10, groundLevel);
+    rect(-10, groundLevel, width + 10, groundLevel);
     noFill();
   }
 }
 
-function bullets(){
+function bullets() {
   push();
   translate(you.x, you.y);
-  
+
   if (mouseIsPressed && lastBulletShot < millis() - bulletDelay && you.canShoot) {
-    let newPP = new PlayerProjectile(you.x,you.y);
-    newPP.calcDirection();
+    let newPP = new PlayerProjectile(you.x, you.y);
+    newPP.calcStatus();
     playerBullets.push(newPP);
     lastBulletShot = millis();
   }
   pop();
-  
+
   if (playerBullets.length > 0) {
     for (let i = 0; i < playerBullets.length; i++) {
       playerBullets[i].update();
       playerBullets[i].dispBullet();
-      if(playerBullets[i].deleteBullet()){
-        playerBullets.splice(i,1);
+      if (playerBullets[i].deleteBullet()) {
+        playerBullets.splice(i, 1);
       }
     }
   }
