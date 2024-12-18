@@ -16,9 +16,9 @@ let lastBulletShot = 0;
 let bulletDelay = 100;
 let weapon = 'normal';
 let weaponMap = new Map();
-weaponMap.set('normal',1);
-weaponMap.set('double',2);
-weaponMap.set('lazer',10);
+weaponMap.set('normal', 1);
+weaponMap.set('double', 2);
+weaponMap.set('lazer', 10);
 const MAX_FLY_JUICE = 100;
 
 class Player {
@@ -88,7 +88,7 @@ class Player {
     }
     if (this.y + this.radius < groundLevel) { // falling
       this.dy += gravity;
-      if (keyIsDown(87) && dist(0,this.y,0,groundLevel) > this.jumpHeight*12.5) {
+      if (keyIsDown(87) && dist(0, this.y, 0, groundLevel) > this.jumpHeight * 12.5) {
         this.dy = 1.5;
       }
       this.y += this.dy;
@@ -186,13 +186,9 @@ class PlayerProjectile {
 
   }
   dispBullet() {
-    if (this.damage === 'normal') {
-      circle(this.x, this.y, this.size);
-    }
-    else if (this.damage === 'double'){
-      circle(this.x+5,this.y,this.size);
-      circle(this.x-5,this.y,this.size);
-    }
+    // if (this.damage === 'normal') {
+    circle(this.x, this.y, this.size);
+    // }
   }
   deleteBullet() {
     if (this.x < 0 || this.x > width || this.y > groundLevel || this.y < 0) {
@@ -274,10 +270,18 @@ function bullets() {
   translate(you.x, you.y);
 
   if (mouseIsPressed && lastBulletShot < millis() - bulletDelay && you.canShoot) {
-    let newPP = new PlayerProjectile(you.x, you.y);
-    newPP.calcStatus();
-    playerBullets.push(newPP);
-    lastBulletShot = millis();
+    if (weapon === 'single' || weapon === 'double') {
+      let newPP = new PlayerProjectile(you.x, you.y);
+      newPP.calcStatus();
+      if (weapon === 'double') {
+        playerBullets.push(newPP.x+5);
+        playerBullets.push(newPP.x-5);
+      }
+      else{
+        playerBullets.push(newPP);
+      }
+      lastBulletShot = millis();
+    }
   }
   pop();
 
