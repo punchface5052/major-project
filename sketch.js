@@ -25,16 +25,16 @@ class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.radius = 25;
+    this.radius = 25; 
     this.speed = 10;
     this.jumpHeight = 10;
     this.health = 100;
-    this.dy = 0;
-    this.flyJuice = MAX_FLY_JUICE;
-    this.dashStrength = 40;
-    this.isJumpable = false;
-    this.isDamagable = true;
-    this.canShoot = true;
+    this.dy = 0; // Used for calculating falling and jumping
+    this.flyJuice = MAX_FLY_JUICE; // amount of ability to fly and dash
+    this.dashStrength = 40; 
+    this.isJumpable = false; // determines whether or not on the ground
+    this.isDamagable = true; // disabled when dashing and flying
+    this.canShoot = true; // determines delay between shooting
   }
 
   displayChar() {
@@ -46,19 +46,19 @@ class Player {
 
   update() {
     if (keyIsDown(65)) {
-      if (this.x > 0 + this.radius) {
+      if (this.x > 0 + this.radius) { // move left
         this.x -= this.speed;
       }
       else {
-        this.x = 0 + this.radius;
+        this.x = 0 + this.radius; // confine within screen
       }
     }
     if (keyIsDown(68)) {
-      if (this.x < width - this.radius) {
+      if (this.x < width - this.radius) { // move right
         this.x += this.speed;
       }
       else {
-        this.x = width - this.radius;
+        this.x = width - this.radius; // confine within screen
       }
     }
     this.applyGravity();
@@ -171,14 +171,15 @@ class PlayerProjectile {
     this.speed = 20;
     this.dx = 0;
     this.dy = 0;
+    this.angle = 0;
     this.size = 5;
     this.damage = weapon;
   }
   calcStatus() {
-    let angle = atan2(mouseY - you.y, mouseX - you.x);
-    this.dx = cos(angle) * this.speed;
-    this.dy = sin(angle) * this.speed;
-
+    // if(weapon === 'normal'){
+    this.angle = atan2(mouseY - you.y, mouseX - you.x);
+    this.dx = cos(this.angle) * this.speed;
+    this.dy = sin(this.angle) * this.speed;
   }
   update() {
     this.x += this.dx;
@@ -186,9 +187,13 @@ class PlayerProjectile {
 
   }
   dispBullet() {
-    // if (this.damage === 'normal') {
-    circle(this.x, this.y, this.size);
-    // }
+    if (this.damage === 'normal') {
+      circle(this.x, this.y, this.size);
+    }
+    else if (this.damage === 'double') {
+      circle(this.x - cos(this.angle - 90) * this.size, this.y - sin(this.angle - 90) * this.size, this.size);
+      circle(this.x + cos(this.angle - 90) * this.size, this.y + sin(this.angle - 90) * this.size, this.size);
+    }
   }
   deleteBullet() {
     if (this.x < 0 || this.x > width || this.y > groundLevel || this.y < 0) {
@@ -238,6 +243,7 @@ class Boss {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  angleMode(DEGREES);
   you = new Player(50, 50);
   boss = new Boss(width / 2, height / 2);
   groundLevel = height - height / 16;
@@ -270,14 +276,15 @@ function bullets() {
   translate(you.x, you.y);
 
   if (mouseIsPressed && lastBulletShot < millis() - bulletDelay && you.canShoot) {
-    if (weapon === 'single' || weapon === 'double') {
-      let newPP = new PlayerProjectile(you.x, you.y);
-      newPP.calcStatus();
+    if (weapon === 'normal' || weapon === 'double') {
       if (weapon === 'double') {
-        playerBullets.push(newPP.x+5);
-        playerBullets.push(newPP.x-5);
+        let newPP = new PlayerProjectile(you.x, you.y);
+        newPP.calcStatus();
+        playerBullets.push(newPP);
       }
-      else{
+      else {
+        let newPP = new PlayerProjectile(you.x, you.y);
+        newPP.calcStatus();
         playerBullets.push(newPP);
       }
       lastBulletShot = millis();
@@ -299,6 +306,12 @@ function bullets() {
 function keyPressed() {
   if (keyCode === 16) {
     you.dash();
+  }
+  if (key === 'n') {
+    weapon = 'normal';
+  }
+  if (key === 'b') {
+    weapon = 'double';
   }
 }
 
