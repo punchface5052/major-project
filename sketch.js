@@ -5,15 +5,15 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
-
 let state = 'title';
 let groundLevel;
 let you;
 let bossMan;
 let gravity = 0.98;
 let playerBullets = [];
+let bossBullets = [];
 let lastBulletShot = 0;
-let bulletDelay = 100;
+let playerBulletDelay = 100;
 let weapon = 'normal';
 let weaponMap = new Map();
 weaponMap.set('normal', 1);
@@ -29,6 +29,7 @@ class Player {
     this.speed = 10;
     this.jumpHeight = 10;
     this.health = 100;
+    this.lastPlayerBullet = 0;
     this.dy = 0; // Used for calculating falling and jumping
     this.flyJuice = MAX_FLY_JUICE; // amount of ability to fly and dash
     this.dashStrength = 40; 
@@ -202,24 +203,70 @@ class PlayerProjectile {
   }
 }
 
+class BossProjectile {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.speed = 20;
+    this.dx = 0;
+    this.dy = 0;
+    this.angle = 0;
+    this.size = 5;
+    this.damage = weapon;
+  }
+  calcStatus() {
+    // if(weapon === 'normal'){
+    this.angle = atan2(mouseY - you.y, mouseX - you.x);
+    this.dx = cos(this.angle) * this.speed;
+    this.dy = sin(this.angle) * this.speed;
+  }
+  update() {
+    this.x += this.dx;
+    this.y += this.dy;
+
+  }
+  dispBullet() {
+    if (this.damage === 'normal') {
+      circle(this.x, this.y, this.size);
+    }
+    else if (this.damage === 'double') {
+      circle(this.x - cos(this.angle - 90) * this.size, this.y - sin(this.angle - 90) * this.size, this.size);
+      circle(this.x + cos(this.angle - 90) * this.size, this.y + sin(this.angle - 90) * this.size, this.size);
+    }
+  }
+  deleteBullet() {
+    if (this.x < 0 || this.x > width || this.y > groundLevel || this.y < 0) {
+      return true;
+    }
+  }
+}
+
 class Boss {
   constructor(x, y) {
     this.x = x;
     this.y = y;
+    this.tempColour = 'red';
     this.size = 50;
     this.speed = 5;
     this.health = 1000;
     this.hit = false;
+    this.phase = 0;
+    this.phaseHasRun = false;
+    this.phaseRunTime;
+    this.phaseStart;
   }
   display() {
     square(this.x, this.y, this.size);
     this.checkHealth();
   }
   update() {
-
+    this.bossPhases();
   }
   shoot() {
+    //TEST:
+    if(phase === 1){
 
+    }
   }
   hitDetec() {
     for (let i = 0; i < playerBullets.length; i++) {
@@ -235,9 +282,25 @@ class Boss {
     fill('black');
     text(this.health, width / 2, height / 2);
     noFill();
-    // if('yes'){
-
-    // }
+  }
+  bossPhases(){
+    if(this.phase === 1){
+      if(this.phaseStart > millis() - this.phaseRunTime){
+        fill(this.tempColour);
+        console.log('phase running');
+      }
+      else if(this.phaseHasRun === false){
+        this.phaseRunTime = 5000;
+        this.phaseStart = millis();
+        console.log('phase start');
+        this.phaseHasRun = true;
+      }
+      else{
+        console.log('phase end');
+        this.phase = 0;
+        this.phaseHasRun = false;
+      }
+    }
   }
 }
 
@@ -245,7 +308,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   angleMode(DEGREES);
   you = new Player(50, 50);
-  boss = new Boss(width / 2, height / 2);
+  bossMan = new Boss(width / 2, height / 2);
   groundLevel = height - height / 16;
 }
 
@@ -256,11 +319,12 @@ function draw() {
   else if (state === 'game') {
     background(220);
     you.update();
+    bossMan.update();
+    bossMan.display();
     you.displayChar();
     bullets();
     you.checkHealth();
     you.dispFlyJuice();
-    boss.display();
 
 
     fill('black');
@@ -275,7 +339,7 @@ function bullets() {
   push();
   translate(you.x, you.y);
 
-  if (mouseIsPressed && lastBulletShot < millis() - bulletDelay && you.canShoot) {
+  if (mouseIsPressed && you.lastPlayerBullet < millis() - playerBulletDelay && you.canShoot) {
     if (weapon === 'normal' || weapon === 'double') {
       if (weapon === 'double') {
         let newPP = new PlayerProjectile(you.x, you.y);
@@ -287,7 +351,38 @@ function bullets() {
         newPP.calcStatus();
         playerBullets.push(newPP);
       }
-      lastBulletShot = millis();
+      you.lastPlayerBullet = millis();
+    }
+  }
+  pop();
+
+  if (playerBullets.length > 0) {
+    for (let i = 0; i < playerBullets.length; i++) {
+      playerBullets[i].update();
+      playerBullets[i].dispBullet();
+      if (playerBullets[i].deleteBullet()) {
+        playerBullets.splice(i, 1);
+      }
+    }
+  }
+
+
+  push();
+  translate(bossMan.x, bossMan.y);
+
+  if (bossMan.lastBossBullet < millis() - bossBulletDelay) {
+    if (weapon === 'normal' || weapon === 'double') {
+      if (weapon === 'double') {
+        let newPP = new PlayerProjectile(you.x, you.y);
+        newPP.calcStatus();
+        playerBullets.push(newPP);
+      }
+      else {
+        let newPP = new PlayerProjectile(you.x, you.y);
+        newPP.calcStatus();
+        playerBullets.push(newPP);
+      }
+      bossMan.lastBossBullet = millis();
     }
   }
   pop();
@@ -320,7 +415,7 @@ function mousePressed() {
   if (state === 'title') {
     state = 'game';
     textSize(11);
-    lastBulletShot = millis();
+    you.lastPlayerBullet = millis();
   }
 }
 
