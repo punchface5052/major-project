@@ -6,10 +6,10 @@ Make a Bullet-Hell centered around Cheese
 
 - [ ] Cheese - #1 in Importance
 - [ ] At least one level 
-- [ ] Proper Bullet Shooting
-- [ ] Good Fluid Movement
+- [x] Proper Bullet Shooting
+- [x] Good Fluid Movement
 - [ ] Hit detection with actual death
-- [ ] Functional Boss and Player Health
+- [x] Functional Boss and Player Health
 - [ ] Restart Game
 - [ ] Music & SFX
 

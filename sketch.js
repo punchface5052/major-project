@@ -19,25 +19,27 @@ let weaponMap = new Map();
 weaponMap.set('normal', 1);
 weaponMap.set('double', 2);
 weaponMap.set('lazer', 10);
-const MAX_FLY_JUICE = 100;
-const MAX_HEALTH = 100;
+const MAX_FLY_JUICE = 100; // Max Flying power, used for regenerating fly juice
+const P_MAX_HEALTH = 5; // Player Max Health, used for regen and other calculations
+const B_MAX_HEALTH = 1000; // Boss Max Health, used for calculations
 
 class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.radius = 25; 
+    this.dy = 0; // Used for calculating falling and jumping
+    this.radius = 25;
     this.speed = 10;
     this.jumpHeight = 10;
-    this.health = 100;
-    this.lastPlayerBullet = 0;
-    this.dy = 0; // Used for calculating falling and jumping
+    this.health = 5;
     this.flyJuice = MAX_FLY_JUICE; // amount of ability to fly and dash
-    this.dashStrength = 40; 
-    this.hit = false;
+    this.dashStrength = 40;
+    this.lastPlayerBullet = 0; // Time between bullets
+    this.isHit = false; // check collision with bullets
     this.isJumpable = false; // determines whether or not on the ground
     this.isDamagable = true; // disabled when dashing and flying
     this.canShoot = true; // determines delay between shooting
+    this.hasHealed = false;
   }
 
   displayChar() {
@@ -68,15 +70,21 @@ class Player {
   }
 
   checkHealth() {
-    if(state === 'game'){
+    if (state === 'game') {
       this.hitDetec();
+      rect(50, 50, width / 4, 20);
       fill('orange');
-      rect(50, 50, width / 4 * (this.health / 100), 20);
+      rect(50, 50, width / 4 * (this.health / P_MAX_HEALTH), 20);
       fill('black');
       text(this.health, width / 8, 65);
     }
-    if(this.health <= 0){
+    if (this.health <= 0) {
       this.isDamagable = false;
+      this.health = 0;
+    }
+    if (bossMan.health % (B_MAX_HEALTH / 20) === 0 && this.health < P_MAX_HEALTH && !this.hasHealed && bossMan.health !== B_MAX_HEALTH) {
+      this.health += P_MAX_HEALTH / 5;
+      this.hasHealed = true;
     }
   }
 
@@ -89,7 +97,9 @@ class Player {
       this.radius = 25;
       this.speed = 10;
       this.canShoot = true;
-      this.isDamagable = true;
+      if(this.health > 0){
+        this.isDamagable = true;
+      }
     }
     if (this.y + this.radius < groundLevel) { // falling
       this.dy += gravity;
@@ -143,18 +153,19 @@ class Player {
       }
     }
   }
+
   hitDetec() {
-    if(this.isDamagable){
+    if (this.isDamagable) {
       for (let i = 0; i < bossBullets.length; i++) {
-        this.hit = collideCircleCircle(this.x, this.y, this.radius*2, bossBullets[i].x, bossBullets[i].y, bossBullets[i].size);
-        // console.log(this.hit);
-        if (this.hit) {
-          this.health -= 1/5 * MAX_HEALTH;
+        this.isHit = collideCircleCircle(this.x, this.y, this.radius * 2, bossBullets[i].x, bossBullets[i].y, bossBullets[i].size);
+        if (this.isHit) {
+          this.health -= 1 / 5 * P_MAX_HEALTH;
           bossBullets.splice(i, 1);
         }
       }
     }
   }
+
   dash() {
     if (this.flyJuice > this.dashStrength && this.y + this.radius === groundLevel && millis()) {
       if (keyIsDown(65)) {
@@ -234,7 +245,7 @@ class BossProjectile {
     // this.dx = cos(this.angle) * this.speed;
     // this.dy = sin(this.angle) * this.speed;
     this.dx = 0;
-    this.dy = 0.1;
+    this.dy = 5;
   }
   update() {
     this.x += this.dx;
@@ -258,7 +269,7 @@ class Boss {
     this.size = 50;
     this.speed = 5;
     this.health = 1000;
-    this.hit = false;
+    this.isHit = false;
     this.lastBossBullet = 0;
     this.phase = 0;
     this.phaseHasRun = false;
@@ -274,16 +285,17 @@ class Boss {
   }
   shoot() {
     //TEST:
-    if(phase === 1){
-      
+    if (phase === 1) {
+
     }
   }
   hitDetec() {
     for (let i = 0; i < playerBullets.length; i++) {
-      this.hit = collideRectCircle(this.x, this.y, this.size, this.size, playerBullets[i].x, playerBullets[i].y, playerBullets[i].size);
-      if (this.hit) {
+      this.isHit = collideRectCircle(this.x, this.y, this.size, this.size, playerBullets[i].x, playerBullets[i].y, playerBullets[i].size);
+      if (this.isHit) {
         this.health -= weaponMap.get(playerBullets[i].damage);
         playerBullets.splice(i, 1);
+        you.hasHealed = false;
       }
     }
   }
@@ -293,19 +305,19 @@ class Boss {
     text(this.health, width / 2, height / 2);
     noFill();
   }
-  bossPhases(){
-    if(this.phase === 1){
-      if(this.phaseStart > millis() - this.phaseRunTime){
+  bossPhases() {
+    if (this.phase === 1) {
+      if (this.phaseStart > millis() - this.phaseRunTime) {
         fill(this.tempColour);
         console.log('phase running');
       }
-      else if(this.phaseHasRun === false){
+      else if (this.phaseHasRun === false) {
         this.phaseRunTime = 5000;
         this.phaseStart = millis();
         console.log('phase start');
         this.phaseHasRun = true;
       }
-      else{
+      else {
         console.log('phase end');
         this.phase = 0;
         this.phaseHasRun = false;
@@ -379,7 +391,7 @@ function bullets() {
 
   push();
   translate(bossMan.x, bossMan.y);
-  if (bossMan.lastBossBullet < millis() - 10000) {
+  if (bossMan.lastBossBullet < millis() - 1000) {
     let newBP = new BossProjectile(bossMan.x, bossMan.y);
     newBP.calcStatus();
     bossBullets.push(newBP);
@@ -408,7 +420,7 @@ function keyPressed() {
   if (key === 'b') {
     weapon = 'double';
   }
-  if(key === 'p'){
+  if (key === 'p') {
     bossMan.phase = 1;
   }
 }
