@@ -233,19 +233,18 @@ class BossProjectile {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.speed = 5;
+    this.speed = 1;
     this.dx = 0;
     this.dy = 0;
     this.angle = 0;
     this.size = 5;
   }
-  calcStatus() {
-    // if(weapon === 'normal'){
-    // this.angle = atan2(mouseY - you.y, mouseX - you.x);
-    // this.dx = cos(this.angle) * this.speed;
-    // this.dy = sin(this.angle) * this.speed;
-    this.dx = 0;
-    this.dy = 5;
+  calcStatus(runNumber) {
+    if(bossMan.phase === 1){
+      this.angle = 360/runNumber;
+      this.dx = cos(this.angle) * this.speed;
+      this.dy = sin(this.angle) * this.speed;
+    }
   }
   update() {
     this.x += this.dx;
@@ -309,16 +308,13 @@ class Boss {
     if (this.phase === 1) {
       if (this.phaseStart > millis() - this.phaseRunTime) {
         fill(this.tempColour);
-        console.log('phase running');
       }
       else if (this.phaseHasRun === false) {
         this.phaseRunTime = 5000;
         this.phaseStart = millis();
-        console.log('phase start');
         this.phaseHasRun = true;
       }
       else {
-        console.log('phase end');
         this.phase = 0;
         this.phaseHasRun = false;
       }
@@ -357,6 +353,20 @@ function draw() {
   }
 }
 
+function test(){
+  for (let i = 0; i < 36; i++){
+    push();
+    translate(bossMan.x, bossMan.y);
+    // if (bossMan.lastBossBullet < millis() - 1000) {
+      let newBP = new BossProjectile(bossMan.x, bossMan.y);
+      newBP.calcStatus(i);
+      bossBullets.push(newBP);
+      bossMan.lastBossBullet = millis();
+    // }
+    pop();
+  }
+}
+
 function bullets() {
   push();
   translate(you.x, you.y);
@@ -388,17 +398,6 @@ function bullets() {
     }
   }
 
-
-  push();
-  translate(bossMan.x, bossMan.y);
-  if (bossMan.lastBossBullet < millis() - 1000) {
-    let newBP = new BossProjectile(bossMan.x, bossMan.y);
-    newBP.calcStatus();
-    bossBullets.push(newBP);
-    bossMan.lastBossBullet = millis();
-  }
-  pop();
-
   if (bossBullets.length > 0) {
     for (let i = 0; i < bossBullets.length; i++) {
       bossBullets[i].update();
@@ -422,6 +421,7 @@ function keyPressed() {
   }
   if (key === 'p') {
     bossMan.phase = 1;
+    test();
   }
 }
 
