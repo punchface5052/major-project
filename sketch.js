@@ -233,7 +233,7 @@ class BossProjectile {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.speed = 1;
+    this.speed = 0.5;
     this.dx = 0;
     this.dy = 0;
     this.angle = 0;
@@ -241,14 +241,19 @@ class BossProjectile {
   }
   calcStatus(runNumber) {
     if(bossMan.phase === 1){
-      this.angle = 360/runNumber;
-      this.dx = cos(this.angle) * this.speed;
-      this.dy = sin(this.angle) * this.speed;
+      this.angle = 10 * runNumber;
     }
   }
   update() {
+    this.updateAngle();
     this.x += this.dx;
     this.y += this.dy;
+  }
+  updateAngle(){
+    this.angle += 1;
+    this.speed += 0.05;
+    this.dx = cos(this.angle + this.speed) * this.speed;
+    this.dy = sin(this.angle + this.speed) * this.speed;
   }
   dispBullet() {
     circle(this.x, this.y, this.size);
