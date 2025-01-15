@@ -244,11 +244,13 @@ class BossProjectile {
     this.dy = 0;
     this.angle = 0;
     this.size = 5;
+    this.rotationDir;
   }
-  calcStatus(runNumber) {
+  calcStatus(runNumber, posNeg) {
     if (bossMan.phase === 1) {
       this.angle = 10 * runNumber;
     }
+    this.rotationDir = posNeg;
   }
   update() {
     this.updateAngle();
@@ -256,7 +258,12 @@ class BossProjectile {
     this.y += this.dy;
   }
   updateAngle() {
-    this.angle += 1;
+    if (this.rotationDir === 'CW') {
+      this.angle += 1;
+    }
+    if (this.rotationDir === 'CCW') {
+      this.angle -= 1;
+    }
     this.speed += 0.05;
     this.dx = cos(this.angle + this.speed) * this.speed;
     this.dy = sin(this.angle + this.speed) * this.speed;
@@ -276,8 +283,8 @@ class Boss {
     this.x = x;
     this.y = y;
     this.tempColour = 'red';
-    this.width = bossImage.width*0.25;
-    this.height = bossImage.height*0.25;
+    this.width = bossImage.width * 0.25;
+    this.height = bossImage.height * 0.25;
     this.speed = 5;
     this.health = 1000;
     this.isHit = false;
@@ -289,7 +296,7 @@ class Boss {
   }
   display() {
     imageMode(CORNER);
-    image(bossImage,this.x,this.y,this.width,this.height);
+    image(bossImage, this.x, this.y, this.width, this.height);
     this.checkHealth();
   }
   update() {
@@ -377,11 +384,25 @@ function test() {
     translate(bossMan.x, bossMan.y);
     // if (bossMan.lastBossBullet < millis() - 1000) {
     let newBP = new BossProjectile(bossMan.x, bossMan.y);
-    newBP.calcStatus(i);
+    newBP.calcStatus(i, 'CW');
     bossBullets.push(newBP);
     bossMan.lastBossBullet = millis();
     // }
     pop();
+  }
+
+  while (bossMan.lastBossBullet < millis() - 3000) {
+    for (let i = 0; i < PHASE_1_BULLETS; i++) {
+      push();
+      translate(bossMan.x, bossMan.y);
+      // if (bossMan.lastBossBullet < millis() - 1000) {
+      let newBP = new BossProjectile(bossMan.x, bossMan.y);
+      newBP.calcStatus(i, 'CCW');
+      bossBullets.push(newBP);
+      bossMan.lastBossBullet = millis();
+      // }
+      pop();
+    }
   }
 }
 
@@ -432,7 +453,7 @@ function keyPressed() {
     you.dash();
   }
   else {
-    if(you.lastDash < millis() - DASH_I_FRAMES){
+    if (you.lastDash < millis() - DASH_I_FRAMES) {
       you.isDamagable = false;
     }
   }
