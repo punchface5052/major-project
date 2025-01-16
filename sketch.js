@@ -5,6 +5,10 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
+
+let counter = 0;
+
+let bossHitSound, playerHitSound, bgm, dashSwoosh, boom, wingFlap; // initializing sound effects
 let state = 'title';
 let groundLevel;
 let you;
@@ -45,7 +49,7 @@ class Player {
     this.canShoot = true; // determines delay between shooting
     this.hasHealed = false;
   }
-
+  
   displayChar() {
     imageMode(CENTER);
     image(mainchar, this.x, this.y, this.size * 3, this.size * 3);
@@ -70,7 +74,7 @@ class Player {
     }
     this.applyGravity();
   }
-
+  
   checkHealth() {
     if (state === 'game') {
       this.hitDetec();
@@ -124,13 +128,13 @@ class Player {
     }
     this.jump();
   }
-
+  
   jump() {
     if (keyIsDown(32) && this.isJumpable) {
       this.dy -= this.jumpHeight;
     }
   }
-
+  
   flight() {
     if (this.flyJuice > 0) {
       gravity = 0;
@@ -182,11 +186,12 @@ class Player {
       }
 
       if (keyIsDown(65) || keyIsDown(68)) {
+        dashSwoosh.play();
         this.flyJuice -= this.dashStrength;
       }
     }
   }
-
+  
   dispFlyJuice() {
     noFill();
     rect(50, 75, width / 4, 20);
@@ -194,6 +199,106 @@ class Player {
     rect(50, 75, width / 4 * (this.flyJuice / 100), 20);
     noFill();
     rect(50, 75, width / 10, 20);
+  }
+}
+
+class Boss {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.tempColour = 'red';
+    this.width = bossImage.width * 0.25;
+    this.height = bossImage.height * 0.25;
+    this.speed = 5;
+    this.health = 1000;
+    this.isHit = false;
+    this.lastBossBullet = 0;
+    this.attackNumb = 0;
+    this.phase = 0;
+    this.phaseHasRun = false;
+    this.phaseRunTime;
+    this.phaseStart;
+  }
+  display() {
+    imageMode(CORNER);
+    image(bossImage, this.x, this.y, this.width, this.height);
+    this.checkHealth();
+  }
+  update() {
+    this.bossPhases();
+  }
+  hitDetec() {
+    for (let i = 0; i < playerBullets.length; i++) {
+      this.isHit = collideRectCircle(this.x, this.y, this.width, this.height, playerBullets[i].x, playerBullets[i].y, playerBullets[i].size);
+      if (this.isHit) {
+        this.health -= weaponMap.get(playerBullets[i].damage);
+        playerBullets.splice(i, 1);
+        you.hasHealed = false;
+      }
+    }
+  }
+  checkHealth() {
+    this.hitDetec();
+    fill('black');
+    text(this.health, width / 2, height / 2);
+    noFill();
+  }
+  bossPhases() {
+    if (this.phase === 1) {
+      if (this.phaseStart > millis() - this.phaseRunTime) {
+        fill(this.tempColour);
+      }
+      else if (this.phaseHasRun === false) {
+        this.phaseRunTime = 5000;
+        this.phaseStart = millis();
+        this.phaseHasRun = true;
+      }
+      else {
+        this.phase = 0;
+        this.phaseHasRun = false;
+      }
+    }
+  }
+
+  shoot(){
+    if(this.phase === 1 && this.attackNumb <= 3){
+      setInterval(this.spiral(),3000);
+    }
+  }
+  spiral() {
+    if(this.phase === 1){
+      if(this.attackNumb === 1){
+        counter++;
+        for (let i = 0; i < PHASE_1_BULLETS; i++) {
+          push();
+          translate(this.x, this.y);
+          let newBP = new BossProjectile(bossMan.x, bossMan.y);
+          newBP.calcStatus(i, 'CW');
+          bossBullets.push(newBP);
+          this.lastBossBullet = millis();
+          pop();
+        }
+      }
+      else{
+        counter = 0;
+      }
+  
+      if(counter === 3){
+        bossMan.attackNumb = 2;
+      }
+  
+      if(bossMan.attackNumb === 2 && bossMan.lastBossBullet < millis() - 5000){
+        counter++;
+        for (let i = 0; i < PHASE_1_BULLETS; i++) {
+          push();
+          translate(this.x, this.y);
+          let newBP = new BossProjectile(bossMan.x, bossMan.y);
+          newBP.calcStatus(i, 'CCW');
+          bossBullets.push(newBP);
+          pop();
+        }
+      }
+    }
   }
 }
 
@@ -278,73 +383,37 @@ class BossProjectile {
   }
 }
 
-class Boss {
-  constructor(x, y) {
+class Particulate {
+  constructor(x, y, dx, dy) {
     this.x = x;
     this.y = y;
-    this.tempColour = 'red';
-    this.width = bossImage.width * 0.25;
-    this.height = bossImage.height * 0.25;
-    this.speed = 5;
-    this.health = 1000;
-    this.isHit = false;
-    this.lastBossBullet = 0;
-    this.phase = 0;
-    this.phaseHasRun = false;
-    this.phaseRunTime;
-    this.phaseStart;
+    this.dx = dx;
+    this.dy = dy;
+    this.size = 5;
+    this.r = 255;
+    this.g = 0;
+    this.b = 0;
+    this.alpha = 255;
   }
-  display() {
-    imageMode(CORNER);
-    image(bossImage, this.x, this.y, this.width, this.height);
-    this.checkHealth();
+  display(){
+    fill(this.r,this.g,this.b,this.alpha);
+    circle(this.x,this.y,this.size);
   }
-  update() {
-    this.bossPhases();
+  update(){
+    this.x += this.dx;
+    this.y += this.dy;
+    this.alpha -= 1;
   }
-  shoot() {
-    //TEST:
-    if (phase === 1) {
-
-    }
-  }
-  hitDetec() {
-    for (let i = 0; i < playerBullets.length; i++) {
-      this.isHit = collideRectCircle(this.x, this.y, this.width, this.height, playerBullets[i].x, playerBullets[i].y, playerBullets[i].size);
-      if (this.isHit) {
-        this.health -= weaponMap.get(playerBullets[i].damage);
-        playerBullets.splice(i, 1);
-        you.hasHealed = false;
-      }
-    }
-  }
-  checkHealth() {
-    this.hitDetec();
-    fill('black');
-    text(this.health, width / 2, height / 2);
-    noFill();
-  }
-  bossPhases() {
-    if (this.phase === 1) {
-      if (this.phaseStart > millis() - this.phaseRunTime) {
-        fill(this.tempColour);
-      }
-      else if (this.phaseHasRun === false) {
-        this.phaseRunTime = 5000;
-        this.phaseStart = millis();
-        this.phaseHasRun = true;
-      }
-      else {
-        this.phase = 0;
-        this.phaseHasRun = false;
-      }
-    }
+  isDead(){
+    return this.alpha <= 0;
   }
 }
 
 function preload() {
-  mainchar = loadImage('main-char.png');
-  bossImage = loadImage('boss.png');
+  mainchar = loadImage('assets/main-char.png');
+  bossImage = loadImage('assets/boss.png');
+  dashSwoosh = loadSound('assets/swoosh.wav');
+  dashSwoosh.amp(0.5);
 }
 
 function setup() {
@@ -364,45 +433,17 @@ function draw() {
     you.update();
     bossMan.update();
     bossMan.display();
+    bossMan.shoot();
     you.displayChar();
     bullets();
     you.checkHealth();
     you.dispFlyJuice();
-
 
     fill('black');
     // text(you.flyJuice, 100, 90);
     fill('white');
     rect(-10, groundLevel, width + 10, groundLevel);
     noFill();
-  }
-}
-
-function test() {
-  for (let i = 0; i < PHASE_1_BULLETS; i++) {
-    push();
-    translate(bossMan.x, bossMan.y);
-    // if (bossMan.lastBossBullet < millis() - 1000) {
-    let newBP = new BossProjectile(bossMan.x, bossMan.y);
-    newBP.calcStatus(i, 'CW');
-    bossBullets.push(newBP);
-    bossMan.lastBossBullet = millis();
-    // }
-    pop();
-  }
-
-  while (bossMan.lastBossBullet < millis() - 3000) {
-    for (let i = 0; i < PHASE_1_BULLETS; i++) {
-      push();
-      translate(bossMan.x, bossMan.y);
-      // if (bossMan.lastBossBullet < millis() - 1000) {
-      let newBP = new BossProjectile(bossMan.x, bossMan.y);
-      newBP.calcStatus(i, 'CCW');
-      bossBullets.push(newBP);
-      bossMan.lastBossBullet = millis();
-      // }
-      pop();
-    }
   }
 }
 
@@ -465,7 +506,7 @@ function keyPressed() {
   }
   if (key === 'p') {
     bossMan.phase = 1;
-    test();
+    bossMan.attackNumb = 1;
   }
 }
 
