@@ -246,10 +246,10 @@ class Boss {
   bossPhases() {
     if (this.phase === 1) {
       if (this.phaseStart > millis() - this.phaseRunTime) {
-        fill(this.tempColour);
+        this.shoot();
       }
       else if (this.phaseHasRun === false) {
-        this.phaseRunTime = 5000;
+        this.phaseRunTime = 1000000;
         this.phaseStart = millis();
         this.phaseHasRun = true;
       }
@@ -262,40 +262,43 @@ class Boss {
 
   shoot(){
     if(this.phase === 1 && this.attackNumb <= 3){
-      setInterval(this.spiral(),3000);
+      this.spiral();
     }
   }
   spiral() {
     if(this.phase === 1){
-      if(this.attackNumb === 1){
+      if(this.attackNumb === 1 && this.lastBossBullet < millis() - 50){
         counter++;
         for (let i = 0; i < PHASE_1_BULLETS; i++) {
           push();
           translate(this.x, this.y);
-          let newBP = new BossProjectile(bossMan.x, bossMan.y);
+          let newBP = new BossProjectile(this.x, this.y);
           newBP.calcStatus(i, 'CW');
           bossBullets.push(newBP);
           this.lastBossBullet = millis();
           pop();
         }
       }
-      else{
-        counter = 0;
-      }
   
       if(counter === 3){
-        bossMan.attackNumb = 2;
+        this.attackNumb = 2;
       }
   
-      if(bossMan.attackNumb === 2 && bossMan.lastBossBullet < millis() - 5000){
+      if(this.attackNumb === 2 && this.lastBossBullet < millis() - 50){
         counter++;
+        console.log('test');
         for (let i = 0; i < PHASE_1_BULLETS; i++) {
           push();
           translate(this.x, this.y);
-          let newBP = new BossProjectile(bossMan.x, bossMan.y);
+          let newBP = new BossProjectile(this.x, this.y);
           newBP.calcStatus(i, 'CCW');
           bossBullets.push(newBP);
+          this.lastBossBullet = millis();
           pop();
+        }
+        if(counter === 6){
+          this.attackNumb = 0;
+          this.phase = 0;
         }
       }
     }
@@ -433,7 +436,6 @@ function draw() {
     you.update();
     bossMan.update();
     bossMan.display();
-    bossMan.shoot();
     you.displayChar();
     bullets();
     you.checkHealth();
@@ -507,6 +509,7 @@ function keyPressed() {
   if (key === 'p') {
     bossMan.phase = 1;
     bossMan.attackNumb = 1;
+    counter = 0;
   }
 }
 
