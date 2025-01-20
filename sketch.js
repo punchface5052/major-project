@@ -49,10 +49,10 @@ class Player {
     this.canShoot = true; // determines delay between shooting
     this.hasHealed = false;
   }
-  
+
   displayChar() {
     imageMode(CENTER);
-    image(mainchar, this.x, this.y, this.size * 3, this.size * 3);
+    image(mainchar, this.x, this.y, this.size * 2.5, this.size * 2.5);
   }
 
   update() {
@@ -74,7 +74,7 @@ class Player {
     }
     this.applyGravity();
   }
-  
+
   checkHealth() {
     if (state === 'game') {
       this.hitDetec();
@@ -128,13 +128,13 @@ class Player {
     }
     this.jump();
   }
-  
+
   jump() {
     if (keyIsDown(32) && this.isJumpable) {
       this.dy -= this.jumpHeight;
     }
   }
-  
+
   flight() {
     if (this.flyJuice > 0) {
       gravity = 0;
@@ -191,7 +191,7 @@ class Player {
       }
     }
   }
-  
+
   dispFlyJuice() {
     noFill();
     rect(50, 75, width / 4, 20);
@@ -220,7 +220,7 @@ class Boss {
     this.phaseStart;
   }
   display() {
-    imageMode(CORNER);
+    imageMode(CENTER);
     image(bossImage, this.x, this.y, this.width, this.height);
     this.checkHealth();
   }
@@ -228,14 +228,16 @@ class Boss {
     this.bossPhases();
   }
   hitDetec() {
+    rectMode(CENTER);
     for (let i = 0; i < playerBullets.length; i++) {
-      this.isHit = collideRectCircle(this.x, this.y, this.width, this.height, playerBullets[i].x, playerBullets[i].y, playerBullets[i].size);
+      this.isHit = collideRectCircle(this.x-this.width/2, this.y-this.height/2, this.width, this.height, playerBullets[i].x, playerBullets[i].y, playerBullets[i].size);
       if (this.isHit) {
         this.health -= weaponMap.get(playerBullets[i].damage);
         playerBullets.splice(i, 1);
         you.hasHealed = false;
       }
     }
+    rectMode(CORNER);
   }
   checkHealth() {
     this.hitDetec();
@@ -260,14 +262,14 @@ class Boss {
     }
   }
 
-  shoot(){
-    if(this.phase === 1 && this.attackNumb <= 3){
+  shoot() {
+    if (this.phase === 1 && this.attackNumb <= 3) {
       this.spiral();
     }
   }
   spiral() {
-    if(this.phase === 1){
-      if(this.attackNumb === 1 && this.lastBossBullet < millis() - 50){
+    if (this.phase === 1) {
+      if (this.attackNumb === 1 && this.lastBossBullet < millis() - 50) {
         counter++;
         for (let i = 0; i < PHASE_1_BULLETS; i++) {
           push();
@@ -279,12 +281,15 @@ class Boss {
           pop();
         }
       }
-  
-      if(counter === 3){
-        this.attackNumb = 2;
+
+      if (counter === 3) {
+        this.attackNumb = 3;
+        if (this.lastBossBullet < millis() - 2000) {
+          this.attackNumb = 2;
+        }
       }
-  
-      if(this.attackNumb === 2 && this.lastBossBullet < millis() - 50){
+
+      if (this.attackNumb === 2 && this.lastBossBullet < millis() - 50) {
         counter++;
         console.log('test');
         for (let i = 0; i < PHASE_1_BULLETS; i++) {
@@ -296,7 +301,7 @@ class Boss {
           this.lastBossBullet = millis();
           pop();
         }
-        if(counter === 6){
+        if (counter === 6) {
           this.attackNumb = 0;
           this.phase = 0;
         }
@@ -304,6 +309,7 @@ class Boss {
     }
   }
 }
+
 
 class PlayerProjectile {
   constructor(x, y) {
@@ -317,7 +323,6 @@ class PlayerProjectile {
     this.damage = weapon;
   }
   calcStatus() {
-    // if(weapon === 'normal'){
     this.angle = atan2(mouseY - you.y, mouseX - you.x);
     this.dx = cos(this.angle) * this.speed;
     this.dy = sin(this.angle) * this.speed;
@@ -329,6 +334,7 @@ class PlayerProjectile {
   }
   dispBullet() {
     if (this.damage === 'normal') {
+      fill('yellow');
       circle(this.x, this.y, this.size);
     }
     else if (this.damage === 'double') {
@@ -398,21 +404,23 @@ class Particulate {
     this.b = 0;
     this.alpha = 255;
   }
-  display(){
-    fill(this.r,this.g,this.b,this.alpha);
-    circle(this.x,this.y,this.size);
+  display() {
+    fill(this.r, this.g, this.b, this.alpha);
+    circle(this.x, this.y, this.size);
   }
-  update(){
+  update() {
     this.x += this.dx;
     this.y += this.dy;
     this.alpha -= 1;
   }
-  isDead(){
+  isDead() {
     return this.alpha <= 0;
   }
 }
 
 function preload() {
+  sewerBack = loadImage('assets/sewer-background.jpg');
+  sewerGround = loadImage('assets/sewer-ground.jpg');
   mainchar = loadImage('assets/main-char.png');
   bossImage = loadImage('assets/boss.png');
   dashSwoosh = loadSound('assets/swoosh.wav');
@@ -432,7 +440,9 @@ function draw() {
     dispTitle();
   }
   else if (state === 'game') {
-    background(220);
+    imageMode(CORNER);
+    background(sewerBack);
+    image(sewerGround, -10, groundLevel-height/100, width + 10, height);
     you.update();
     bossMan.update();
     bossMan.display();
@@ -440,12 +450,6 @@ function draw() {
     bullets();
     you.checkHealth();
     you.dispFlyJuice();
-
-    fill('black');
-    // text(you.flyJuice, 100, 90);
-    fill('white');
-    rect(-10, groundLevel, width + 10, groundLevel);
-    noFill();
   }
 }
 
@@ -524,6 +528,10 @@ function mousePressed() {
 
 function dispTitle() {
   textAlign(CENTER);
-  textSize(100);
-  text('hi', width / 2, height / 2);
+  textSize(50);
+  text(`Lore:
+    You are a sentient cheese, which escaped from a labrotory. 
+    Your goal is to fight the rats in the sewers to escape... Good Luck!
+    Click to Begin.`, width / 2.1, height / 2.5);
 }
+
