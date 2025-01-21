@@ -4,7 +4,7 @@ Make a Bullet-Hell centered around Cheese
 
 ## Needs to Have List
 
-- [ ] Cheese - #1 in Importance
+- [x] Cheese - #1 in Importance
 - [ ] At least one level 
 - [x] Proper Bullet Shooting
 - [x] Good Fluid Movement

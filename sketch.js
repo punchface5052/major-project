@@ -78,11 +78,10 @@ class Player {
   checkHealth() {
     if (state === 'game') {
       this.hitDetec();
+      noFill();
       rect(50, 50, width / 4, 20);
       fill('orange');
       rect(50, 50, width / 4 * (this.health / P_MAX_HEALTH), 20);
-      fill('black');
-      text(this.health, width / 8, 65);
     }
     if (this.health <= 0) {
       this.isDamagable = false;
@@ -240,9 +239,11 @@ class Boss {
     rectMode(CORNER);
   }
   checkHealth() {
+    fill('red');
+    rectMode(CENTER);
+    rect(this.x, this.y - 150, this.health , 20);
+    rectMode(CORNER);
     this.hitDetec();
-    fill('black');
-    text(this.health, width / 2, height / 2);
     noFill();
   }
   bossPhases() {
@@ -302,8 +303,9 @@ class Boss {
           pop();
         }
         if (counter === 6) {
-          this.attackNumb = 0;
-          this.phase = 0;
+          counter = 0;
+          this.attackNumb = 1;
+          this.phase = 1;
         }
       }
     }
@@ -338,6 +340,7 @@ class PlayerProjectile {
       circle(this.x, this.y, this.size);
     }
     else if (this.damage === 'double') {
+      fill('yellow');
       circle(this.x - cos(this.angle - 90) * this.size, this.y - sin(this.angle - 90) * this.size, this.size);
       circle(this.x + cos(this.angle - 90) * this.size, this.y + sin(this.angle - 90) * this.size, this.size);
     }
@@ -357,7 +360,7 @@ class BossProjectile {
     this.dx = 0;
     this.dy = 0;
     this.angle = 0;
-    this.size = 5;
+    this.size = 10;
     this.rotationDir;
   }
   calcStatus(runNumber, posNeg) {
@@ -383,6 +386,7 @@ class BossProjectile {
     this.dy = sin(this.angle + this.speed) * this.speed;
   }
   dispBullet() {
+    fill('red');
     circle(this.x, this.y, this.size);
   }
   deleteBullet() {
@@ -440,23 +444,14 @@ function draw() {
     dispTitle();
   }
   else if (state === 'game') {
-    imageMode(CORNER);
-    background(sewerBack);
-    image(sewerGround, -10, groundLevel-height/100, width + 10, height);
-    you.update();
-    bossMan.update();
-    bossMan.display();
-    you.displayChar();
-    bullets();
-    you.checkHealth();
-    you.dispFlyJuice();
+    gameState();
   }
 }
 
 function bullets() {
+  noStroke();
   push();
   translate(you.x, you.y);
-
   if (mouseIsPressed && you.lastPlayerBullet < millis() - playerBulletDelay && you.canShoot) {
     if (weapon === 'normal' || weapon === 'double') {
       if (weapon === 'double') {
@@ -521,9 +516,24 @@ function keyPressed() {
 function mousePressed() {
   if (state === 'title') {
     state = 'game';
+    bossMan.phase = 1;
+    bossMan.attackNumb = 1;
     textSize(11);
     you.lastPlayerBullet = millis();
   }
+}
+
+function gameState(){
+  imageMode(CORNER);
+  background(sewerBack);
+  image(sewerGround, -10, groundLevel-height/100, width + 10, height);
+  you.update();
+  bossMan.update();
+  bossMan.display();
+  you.displayChar();
+  bullets();
+  you.checkHealth();
+  you.dispFlyJuice();
 }
 
 function dispTitle() {
